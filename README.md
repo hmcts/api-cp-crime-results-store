@@ -32,8 +32,8 @@ behaviour (cursors, visibility lag, error reasons) is in the description of each
 - `uk.gov.hmcts.cp.resultsstore.openapi.api.SharesApi`: the Spring interface (`interfaceOnly`)
 - `uk.gov.hmcts.cp.resultsstore.openapi.model.*`: the models, with Lombok builders. `date-time` maps to
   `java.time.Instant`
-- `openapi/openapi-spec.yml`, and the same file again at the jar root as `results-store-openapi.yaml`
-  (the service's audit filter finds its spec by that unique name)
+- `openapi/openapi-spec.yml`, the spec, once. The service keeps its own copy as
+  `results-store-openapi.yaml` for its audit filter, and a test there fails if that copy drifts from this one
 - `META-INF/CHANGELOG.md` and the SBOM at `META-INF/sbom/bom.json`
 
 The generated code carries no bean validation: request validation stays in the service. The jar brings

@@ -1,5 +1,5 @@
-# The Results Store read API (service-cp-crime-results-store). The jar also carries this file as
-# results-store-openapi.yaml at its root, the name the service's audit filter resolves by suffix glob.
+# The Results Store read API (service-cp-crime-results-store). The jar carries this file once, at
+# openapi/openapi-spec.yml; the service keeps an identical copy as results-store-openapi.yaml.
 openapi: 3.0.3
 
 servers:

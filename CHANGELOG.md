@@ -18,4 +18,4 @@ All notable changes to the Results Store API contract are recorded here. The for
   - `ProblemDetail` for every 4xx and 5xx response, with the fixed `reason` list
 - Every model field is written, `null` when missing (no `@JsonInclude(NON_NULL)`); no bean validation
   annotations are relied on, as request validation stays in the service
-- The jar carries the spec twice: `openapi/openapi-spec.yml` and `results-store-openapi.yaml` at its root
+- The jar carries the spec once, at `openapi/openapi-spec.yml`
