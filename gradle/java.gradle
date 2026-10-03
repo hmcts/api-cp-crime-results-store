@@ -19,3 +19,9 @@ tasks.named('wrapper') {
 tasks.withType(JavaCompile).configureEach {
   options.compilerArgs = ["-Xlint:unchecked", "-Werror"]
 }
+// Main sources are all generated. Lombok warns that @Builder ignores the "= null" initialiser the
+// generator writes on every nullable field; the default is null either way, so the warning carries
+// no signal there. Hand-written test code stays under -Werror.
+tasks.named('compileJava') {
+  options.compilerArgs = ["-Xlint:unchecked"]
+}

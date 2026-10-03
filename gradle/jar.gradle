@@ -9,14 +9,15 @@ jar {
     println "⚠️  CHANGELOG.md not found, skipping inclusion in JAR"
   }
 
-  def sbomFile = file("${layout.buildDirectory.get().asFile.absolutePath}/reports/bom.json")
-  if (sbomFile.exists()) {
-    println "✅ Including SBOM from ${sbomFile} in JAR"
-    from(sbomFile) {
-      into 'META-INF/sbom'
-      rename { 'bom.json' }
-    }
-  } else {
-    println "⚠️  SBOM (bom.json) not found, skipping inclusion in JAR"
+  // Resolved when the jar is built, after cyclonedxBom has written it
+  from(layout.buildDirectory.file('reports/cyclonedx/bom.json')) {
+    into 'META-INF/sbom'
+    rename { 'bom.json' }
+  }
+
+  // A second copy of the spec at the jar root under a name unique to this API: the service's
+  // audit filter finds its OpenAPI document by a suffix glob over the classpath
+  from('src/main/resources/openapi/openapi-spec.yml') {
+    rename { 'results-store-openapi.yaml' }
   }
 }

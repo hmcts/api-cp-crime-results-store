@@ -5,17 +5,20 @@ tasks.named('compileJava') {
 openApiGenerate {
   inputSpec.set("src/main/resources/openapi/openapi-spec.yml")
   outputDir = "${layout.buildDirectory.get().asFile.absolutePath}/generated"
-  apiPackage = "uk.gov.hmcts.cp.openapi.api"
-  modelPackage = "uk.gov.hmcts.cp.openapi.model"
+  apiPackage = "uk.gov.hmcts.cp.resultsstore.openapi.api"
+  modelPackage = "uk.gov.hmcts.cp.resultsstore.openapi.model"
   generatorName = "spring"
   typeMappings = ["OffsetDateTime": "Instant"]
-  importMappings = ["java.time.OffsetDateTime": "java.time.Instant"]
+  importMappings = ["java.time.OffsetDateTime": "java.time.Instant", "Instant": "java.time.Instant"]
   configOptions = [
     interfaceOnly                       : "true",
     useSpringBoot3                      : "true",
     useTags                             : "true",   // use tag for api name
     generatedConstructorWithRequiredArgs: "false",  // else conflicts with lombok AllArgsConstructor
     openApiNullable                     : "false",  // else generates classes JsonNullable imports
+    useBeanValidation                   : "false",  // request validation stays in the service
+    generateJsonIncludeAnnotations      : "false",  // no @JsonInclude: the contract writes every field, null when missing
+    generateJsonSetterNullsAnnotations  : "false",  // null handling on read stays with the consumer's ObjectMapper
     additionalModelTypeAnnotations      : "@lombok.Builder;@lombok.AllArgsConstructor;@lombok.NoArgsConstructor",
   ]
 }

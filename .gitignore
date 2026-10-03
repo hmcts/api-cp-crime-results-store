@@ -30,3 +30,5 @@ package-lock.json
 */.DS_Store
 
 /*report.html
+### Local tooling ###
+.claude/

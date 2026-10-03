@@ -6,6 +6,9 @@ pmd {
 
 tasks.named("pmdMain").configure {
   onlyIf { gradle.startParameter.taskNames.contains(name) }
+  // Generated sources are not ours to restyle; the CI PMD job likewise reads src/main/java only
+  def generatedDir = file("${layout.buildDirectory.get().asFile.absolutePath}/generated").canonicalPath
+  source = source.filter { file -> !file.canonicalPath.startsWith(generatedDir) }
 }
 
 tasks.named("pmdTest").configure {
