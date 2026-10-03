@@ -8,7 +8,7 @@ openApiGenerate {
   apiPackage = "uk.gov.hmcts.cp.resultsstore.openapi.api"
   modelPackage = "uk.gov.hmcts.cp.resultsstore.openapi.model"
   generatorName = "spring"
-  typeMappings = ["OffsetDateTime": "Instant"]
+  typeMappings = ["OffsetDateTime": "Instant", "file": "byte[]"]
   importMappings = ["java.time.OffsetDateTime": "java.time.Instant", "Instant": "java.time.Instant"]
   configOptions = [
     interfaceOnly                       : "true",

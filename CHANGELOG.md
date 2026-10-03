@@ -19,3 +19,9 @@ All notable changes to the Results Store API contract are recorded here. The for
 - Every model field is written, `null` when missing (no `@JsonInclude(NON_NULL)`); no bean validation
   annotations are relied on, as request validation stays in the service
 - The jar carries the spec once, at `openapi/openapi-spec.yml`
+
+### Changed
+- `getSharePayload` now returns `ResponseEntity<byte[]>`: the 200 body is declared `type: string,
+  format: binary` (still `application/json`), so the service serves the working copy's exact bytes,
+  without `_metadata`, and the ETag is the SHA-256 over exactly those bytes. The generator maps `file` to
+  `byte[]`; every other operation is unchanged

@@ -66,8 +66,15 @@ class OpenApiObjectsTest {
     void generated_shares_api_should_return_the_contract_types() {
         assertThat(responseBodyType("pullOrSearchShares")).isEqualTo(PullOrSearchShares200Response.class);
         assertThat(responseBodyType("getShare")).isEqualTo(ShareSummary.class);
-        assertThat(responseBodyType("getSharePayload")).isEqualTo(java.util.Map.class);
         assertThat(responseBodyType("listHearingDayShares")).isEqualTo(DayVersions.class);
+    }
+
+    @Test
+    void generated_get_share_payload_should_return_the_exact_bytes() {
+        // The body is the working copy's exact bytes, so the ETag (SHA-256 over them) holds end to end
+        assertThat(method("getSharePayload").getGenericReturnType().getTypeName())
+                .isEqualTo("org.springframework.http.ResponseEntity<byte[]>");
+        assertThat(responseBodyType("getSharePayload")).isEqualTo(byte[].class);
     }
 
     @Test
