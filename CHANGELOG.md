@@ -1,0 +1,21 @@
+# Changelog
+
+All notable changes to the Results Store API contract are recorded here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow semantic versioning.
+
+## [Unreleased]
+
+### Added
+- First contract for the Results Store read API (`SharesApi`), generated into
+  `uk.gov.hmcts.cp.resultsstore.openapi.api` and `uk.gov.hmcts.cp.resultsstore.openapi.model`:
+  - `GET /results-store/v1/shares` (`pullOrSearchShares`): pull by `storedAfterSeq` (`PullPage`) or
+    search by court centre and day or time range (`SearchPage`)
+  - `GET /results-store/v1/shares/{shareId}` (`getShare`): one share's current details (`ShareSummary`)
+  - `GET /results-store/v1/shares/{shareId}/payload` (`getSharePayload`): the stored payload without
+    `_metadata`, with a strong ETag, `If-None-Match` / 304 and the `Results-Store-*` headers
+  - `GET /results-store/v1/hearings/{hearingId}/days/{hearingDay}/shares` (`listHearingDayShares`): every
+    version of one hearing day (`DayVersions`)
+  - `ProblemDetail` for every 4xx and 5xx response, with the fixed `reason` list
+- Every model field is written, `null` when missing (no `@JsonInclude(NON_NULL)`); no bean validation
+  annotations are relied on, as request validation stays in the service
+- The jar carries the spec twice: `openapi/openapi-spec.yml` and `results-store-openapi.yaml` at its root

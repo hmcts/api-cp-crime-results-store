@@ -1,90 +1,113 @@
-# API HMCTS Marketplace Template Repository
+# api-cp-crime-results-store
 
-This is a template repository for HMCTS Marketplace APIs. It defines naming conventions, structure, and validation tooling for OpenAPI specifications.
+The OpenAPI contract for the **Results Store read API**, and the Java interfaces and models generated
+from it.
 
-The repository template and its associated build workflows are designed to support a single API specification per repository.
+The Results Store (`service-cp-crime-results-store`) keeps every share of every resulted hearing day as
+a versioned, queryable record. This repository holds the contract for reading it. The service implements
+the generated `SharesApi`; teams that read from the store (YOT results distribution, probation results
+distribution, court register, support staff) can use the same spec to build their clients.
 
-> 🔗 API definitions should follow the [HMCTS RESTful API Standards](https://hmcts.github.io/restful-api-standards/).
+This is an internal API. It is not published to the API Marketplace.
 
-## Naming Convention
+## What the API offers
 
-> NOTE: Avoid using terms like `common, core, base, utils, helpers, misc, or shared`.
-> These names often allow for ambiguous ownership and quickly become black holes where cohesion goes to die.
+Every route is `GET` only, under `/results-store/v1`. Send `CJSCPPUID` on every request; the caller must
+be in "System Users" or "Second Line Support".
 
-Repository names follow a pattern from generic to specific:
+| Operation (`SharesApi`) | Method and path | Purpose |
+|---|---|---|
+| `pullOrSearchShares` | `GET /results-store/v1/shares` | Pull with `storedAfterSeq` (a `PullPage`, in stored order), or search one court centre over London days or a `sharedTime` range (a `SearchPage`) |
+| `getShare` | `GET /results-store/v1/shares/{shareId}` | One share's current key details, chain and youth facts (`ShareSummary`) |
+| `getSharePayload` | `GET /results-store/v1/shares/{shareId}/payload` | The payload the store holds for one share, without `_metadata`, with a strong `ETag` and the `Results-Store-*` headers; `If-None-Match` gives a 304 |
+| `listHearingDayShares` | `GET /results-store/v1/hearings/{hearingId}/days/{hearingDay}/shares` | Every version of one hearing day, in `sharedTime` order (`DayVersions`) |
 
+Every 4xx and 5xx body is a `ProblemDetail` with a fixed `reason`. Every field of every item is always
+written, `null` when missing. The spec is
+[`src/main/resources/openapi/openapi-spec.yml`](src/main/resources/openapi/openapi-spec.yml); the full
+behaviour (cursors, visibility lag, error reasons) is in the description of each operation.
+
+## What the jar contains
+
+- `uk.gov.hmcts.cp.resultsstore.openapi.api.SharesApi`: the Spring interface (`interfaceOnly`)
+- `uk.gov.hmcts.cp.resultsstore.openapi.model.*`: the models, with Lombok builders. `date-time` maps to
+  `java.time.Instant`
+- `openapi/openapi-spec.yml`, and the same file again at the jar root as `results-store-openapi.yaml`
+  (the service's audit filter finds its spec by that unique name)
+- `META-INF/CHANGELOG.md` and the SBOM at `META-INF/sbom/bom.json`
+
+The generated code carries no bean validation: request validation stays in the service. The jar brings
+only annotation libraries at runtime (`swagger-annotations`, `jackson-annotations`,
+`jakarta.annotation-api`, `jakarta.validation-api`). Spring Web and the servlet API are compile-time
+only here: the consuming Spring Boot service supplies them.
+
+## Using it
+
+Artefacts are published to Azure Artifacts (`hmcts-lib`) and GitHub Packages as
+`uk.gov.hmcts.cp:api-cp-crime-results-store`.
+
+```groovy
+repositories {
+  maven { url = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/hmcts-lib/maven/v1' }
+}
+
+configurations {
+  apiSpec
+  implementation.extendsFrom apiSpec
+}
+
+dependencies {
+  apiSpec "uk.gov.hmcts.cp:api-cp-crime-results-store:X.Y.Z"
+}
 ```
-api-{sources-system}-[case-type]-{business-domain}-{name-of-entity}
+
+### Versions
+
+| Build | Trigger | Version |
+|---|---|---|
+| Draft | push to `team/<name>` | `<name>-<short-sha>`, for example `rs-1a2b3c4` |
+| Draft | push to `main` | `<projectVersion>-<short-sha>` (`projectVersion` is in `gradle.properties`) |
+| Release | a published GitHub Release `vX.Y.Z` | `X.Y.Z` |
+
+CI writes the artefact version into `info.version` of the published spec, so the version in the file
+on a branch does not matter.
+
+A service may build against a draft while a change is in review, but its release build must pin a fixed
+`X.Y.Z` (the service's `validateApiSpecVersions` task refuses anything else).
+
+## Changing the contract
+
+1. Branch from `main`, change the spec (and `OpenApiObjectsTest` if operations or models change), and
+   add an entry under *Unreleased* in [`CHANGELOG.md`](CHANGELOG.md).
+2. Push the branch to `team/<name>` as well. CI publishes a draft `<name>-<short-sha>`.
+3. In the service, pin the draft in `apiSpec` and build the implementation against it.
+4. Open a pull request here. It needs one approval and the checks to pass.
+5. Merge to `main`, then publish a GitHub Release `vX.Y.Z` (move the *Unreleased* entries under the new
+   version first). CI publishes `X.Y.Z`.
+6. In the service, replace the draft with `X.Y.Z`.
+
+Follow semantic versioning: removing or renaming anything a caller reads is a major change.
+
+## Building locally
+
+Java 25 is required.
+
+```bash
+./gradlew build -DAPI_SPEC_VERSION=0.0.999
 ```
-* `sources-system`: 
-Some examples are:
-  * `cp` - Common Platform
-  * `dcs` - Crown Court Digital Case System
-  * `sscs` - Social Security and Child Support
-    
-* `case-type`: optional parameter could be:
 
-  * civil 
-  * crime 
-  * family 
-  * tribunal
+This generates the sources, compiles them, runs the tests and writes the SBOM. `./gradlew pmdMain` runs
+PMD on hand-written main code (there is none today; generated code is excluded). Lint the spec with
+Spectral:
 
-HMCTS manages all Civil, Criminal, Family (separate from civil), and Tribunal cases.
-
-* `business-domain`, or also could be known as `product-domain`
-
-The Common Platform (CP) will be:
-  * `caseingestion`
-  * `casematerial`
-  * `caseadmin`
-  * `casehearing`
-  * `schedulingandlisting`
-
-### Reference Data Repositories
-
-Reference data APIs use the following naming format:
-
+```bash
+npx -y @stoplight/spectral-cli lint src/main/resources/openapi/openapi-spec.yml --ruleset .spectral.yml
 ```
-api-cp-refdata-{product-domain}-{name-of-entity}
-```
-It could be argued that `product-domain` should be optional for reference data, placing it under global ownership. But global ownership often means no ownership — and no accountability. Therefore, `product-domain` is **required**.
 
-## Supporting Documents
+## Ownership
 
-The [`docs`](./docs) directory includes supporting information for the repository:
-
-- [`API-VERSIONING-STRATEGY.md`](./docs/API-VERSIONING-STRATEGY.md) – How we version APIs using media types and SemVer.
-- [`CHAIN_OF_CUSTODY.md`](./docs/CHAIN_OF_CUSTODY.md) – Steps taken to establish a secure software supply chain and audit trail.
-- [`DATA-PRODUCTS.md`](./docs/DATA-PRODUCTS.md) – Description of structured data outputs generated by the API.
-- [`GITHUB-ACTIONS.md`](./docs/GITHUB-ACTIONS.md) – Overview of GitHub Actions workflows, including secrets and variables.
-- [`OPENAPI-FILE-CONVENTIONS.md`](./docs/OPENAPI-FILE-CONVENTIONS.md) – OpenAPI file and content conventions.
-- [`OPENAPI-SPEC-VERSIONING.md`](./docs/OPENAPI-SPEC-VERSIONING.md) – Rules for evolving OpenAPI specs.
-  
-> **Note** the build requires secrets and variables to be available in project settings; see [GitHub Actions: Required Secrets and Variables](./docs/GITHUB-ACTIONS.md)
-
-## Post-Template Manual Steps
-
-### Setup
-
-* Go to settings of the repository -> General -> check "Automatically delete head branches"
-* Import the ruleset `.github/rulesets/main-branch-protection.json`  
-  To import the ruleset, follow GitHub’s instructions here:  
-  👉 [Importing a ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/managing-rulesets-for-a-repository#importing-a-ruleset)
-  
-Once the ruleset has been successfully imported via GitHub Settings, the new repository no longer requires `.github/rulesets/main-branch-protection.json` so it **should be deleted**:
-
-### Clean Up
-
-After using this template to create your repository, the following files are no longer needed and **should be deleted**:
-
-- `./docs/*`
-- `./src/main/resources/openapi/deleteme`
-
-Update the `./README.md` to reflect the context of the new created repository
-
-### Contribute to This Repository
-
-Contributions are welcome! Please see the [CONTRIBUTING.md](.github/CONTRIBUTING.md) file for guidelines.
+Owned by [@hmcts/results-validation-service-team](https://github.com/orgs/hmcts/teams/results-validation-service-team).
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ## License
 
