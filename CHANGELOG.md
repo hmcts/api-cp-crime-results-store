@@ -16,6 +16,10 @@ All notable changes to the Results Store API contract are recorded here. The for
   - `GET /results-store/v1/hearings/{hearingId}/days/{hearingDay}/shares` (`listHearingDayShares`): every
     version of one hearing day (`DayVersions`)
   - `ProblemDetail` for every 4xx and 5xx response, with the fixed `reason` list
+- `GET /results-store/v1/shares/{shareId}/payload/arrived` (`getShareArrivedPayload`, returns
+  `ResponseEntity<byte[]>`): the text as it arrived, before enrichment, without `_metadata`, served as exact
+  bytes with a strong ETag (the SHA-256 over those bytes), `If-None-Match` / 304 and the same
+  `Results-Store-*` headers as the payload operation, with `Results-Store-Payload-Form: arrived-text`
 - Every model field is written, `null` when missing (no `@JsonInclude(NON_NULL)`); no bean validation
   annotations are relied on, as request validation stays in the service
 - The jar carries the spec once, at `openapi/openapi-spec.yml`

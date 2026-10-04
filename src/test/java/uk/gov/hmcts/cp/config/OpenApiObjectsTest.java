@@ -52,9 +52,9 @@ class OpenApiObjectsTest {
     }
 
     @Test
-    void spec_should_declare_the_four_read_operations() throws IOException {
+    void spec_should_declare_the_five_read_operations() throws IOException {
         assertThat(operationIdsInSpec()).containsExactlyInAnyOrder(
-                "pullOrSearchShares", "getShare", "getSharePayload", "listHearingDayShares");
+                "pullOrSearchShares", "getShare", "getSharePayload", "getShareArrivedPayload", "listHearingDayShares");
     }
 
     @Test
@@ -80,6 +80,24 @@ class OpenApiObjectsTest {
     @Test
     void generated_get_share_payload_should_take_share_id_and_if_none_match() {
         assertThat(method("getSharePayload").getParameterTypes()).containsExactly(UUID.class, String.class);
+    }
+
+    @Test
+    void generated_shares_api_should_have_get_share_arrived_payload() {
+        assertThat(SharesApi.class).hasDeclaredMethods("getShareArrivedPayload");
+    }
+
+    @Test
+    void generated_get_share_arrived_payload_should_return_the_exact_bytes() {
+        // The body is the arrived text's exact bytes, so the ETag (SHA-256 over them) holds end to end
+        assertThat(method("getShareArrivedPayload").getGenericReturnType().getTypeName())
+                .isEqualTo("org.springframework.http.ResponseEntity<byte[]>");
+        assertThat(responseBodyType("getShareArrivedPayload")).isEqualTo(byte[].class);
+    }
+
+    @Test
+    void generated_get_share_arrived_payload_should_take_share_id_and_if_none_match() {
+        assertThat(method("getShareArrivedPayload").getParameterTypes()).containsExactly(UUID.class, String.class);
     }
 
     @Test
