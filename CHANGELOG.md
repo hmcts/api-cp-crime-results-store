@@ -5,6 +5,8 @@ All notable changes to the Results Store API contract are recorded here. The for
 
 ## [Unreleased]
 
+## 0.2.0 - 2026-10-04
+
 ### Added
 - First contract for the Results Store read API (`SharesApi`), generated into
   `uk.gov.hmcts.cp.resultsstore.openapi.api` and `uk.gov.hmcts.cp.resultsstore.openapi.model`:
