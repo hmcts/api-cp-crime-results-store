@@ -5,6 +5,17 @@ All notable changes to the Results Store API contract are recorded here. The for
 
 ## [Unreleased]
 
+### Removed
+- `GET /results-store/v1/shares/{shareId}/payload/arrived` (`getShareArrivedPayload`). The text as it
+  arrived stays in the store for support and is no longer served; no consumer took it up.
+- The `Results-Store-Payload-Form` response header of `getSharePayload`: the payload operation always
+  serves the working copy, so the header carried one value.
+
+### Changed
+- `getSharePayload` describes the working copy only. The store now holds a working copy for every share
+  (the `\u0000` escape and unpaired surrogate escapes are removed from the copy, never from the arrived
+  text), so the arrived-text fallback no longer exists.
+
 ## 0.2.0 - 2026-10-04
 
 ### Added
