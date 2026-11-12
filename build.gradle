@@ -31,7 +31,7 @@ dependencies {
   // transitive dependencies, exposed to consumers so the compiled classes read cleanly there.
   // jakarta.validation-api is here only because the generator still marks required getters
   // @NotNull with useBeanValidation off; nothing in this jar validates.
-  api "io.swagger.core.v3:swagger-annotations:2.2.55"
+  api "io.swagger.core.v3:swagger-annotations:3.0.0"
   api "com.fasterxml.jackson.core:jackson-annotations:2.22"
   api "jakarta.annotation:jakarta.annotation-api:3.0.0"
   api "jakarta.validation:jakarta.validation-api:3.1.1"
